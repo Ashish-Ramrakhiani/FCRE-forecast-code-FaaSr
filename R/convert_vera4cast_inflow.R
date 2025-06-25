@@ -1,5 +1,7 @@
 convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save_endpoint){
 
+  library(tidyverse)
+
   variables <- c("TP_ugL_sample", "NH4_ugL_sample","NO3NO2_ugL_sample",
                  "SRP_ugL_sample","DOC_mgL_sample","DRSI_mgL_sample",
                  "TN_ugL_sample", "CH4_umolL_sample", "DIC_mgL_sample",
@@ -9,8 +11,8 @@ convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save
 
   for(i in 1:length(variables)){
 
-    s3 <- arrow::s3_bucket(bucket = glue::glue("bio230121-bucket01/vera4cast/forecasts/parquet/project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}"),
-                           endpoint_override = "https://amnh1.osn.mghpcc.org",
+    s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}"),
+                           endpoint_override = config$s3$vera_forecasts$endpoint,
                            anonymous = TRUE)
 
     ## test to see if inflow forecast exists ##
@@ -21,7 +23,7 @@ convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save
         dplyr::mutate(variable = variables[i])
     }, error = function(e) {
       stop(paste('\nInflow forecasts were not found at the following path: ',
-                 glue::glue("\"bio230121-bucket01/vera4cast/forecasts/parquet/project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}\"\n"),
+                 glue::glue('"',config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}\"\n"),
                  'Check that inflow model is submitting all needed variables for reference_date value',
                  'Stopping workflow...',
                  sep='\n'))
@@ -101,7 +103,10 @@ convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save
                   reference_date = as.character(reference_date)) |>
     dplyr::select(model_id, site_id, reference_datetime, datetime, family, parameter, variable, prediction, flow_number, reference_date)
 
-  arrow::write_dataset(glm_df_inflow, path = save_path, partitioning = c("model_id", "reference_date", "site_id"))
+  arrow::write_dataset(glm_df_inflow,
+                       path = arrow::s3_bucket(bucket = config$flows_save$future_inflow_model,
+                                               endpoint_override =  config$flows_save$endpoint),
+                       partitioning = c("model_id", "reference_date", "site_id"))
 
 
   glm_df_outflow <- glm_df_inflow |>
@@ -117,11 +122,9 @@ convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save
     dplyr::select(model_id, site_id, reference_datetime, datetime, family, parameter, variable, prediction, flow_number, reference_date)
 
 
-  output_directory <- arrow::s3_bucket(bucket = bucket,
-                                       endpoint_override =  endpoint)
-
-  arrow::write_dataset(dataset = glm_df_outflow,
-                       path = output_directory,
+  arrow::write_dataset(glm_df_inflow,
+                       path = arrow::s3_bucket(bucket = config$flows_save$future_outflow_model,
+                                               endpoint_override =  config$flows_save$endpoint),
                        partitioning = c("model_id", "reference_date", "site_id"))
 
   #arrow::write_dataset(glm_df_outflow, path = save_path, partitioning = c("model_id", "reference_date", "site_id"))

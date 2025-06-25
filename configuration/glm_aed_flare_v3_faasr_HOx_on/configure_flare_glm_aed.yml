@@ -1,25 +1,37 @@
 s3:
+  set_up:
+    region: us-west-2
+    endpoint: s3.us-west-2.amazonaws.com
   drivers:
-    endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/flare/drivers/met
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/drivers/met
   inflow_drivers:
-    endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/flare/drivers/inflow/fcre/lm_ar
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/drivers/inflow
+  outflow_drivers:
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/drivers/outflow
   targets:
     endpoint: amnh1.osn.mghpcc.org
     bucket: bio230121-bucket01/flare/targets
   forecasts:
-    endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/flare/forecasts/netcdf
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/forecasts/netcdf
   forecasts_parquet:
-    endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/flare/forecasts/parquet
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/forecasts/parquet
   restart:
-    endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/flare/restart
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/restart
   scores:
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/scores/parquet
+  vera_forecasts:
     endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/flare/scores/parquet
+    bucket: bio230121-bucket01/vera4cast/forecasts/parquet
+  output_plots:
+    endpoint: s3.us-west-2.amazonaws.com
+    bucket: faasr-bucket-0001/flare/model_id=glm_aed_flare_v3_faasr_HOx_on/reference_date={reference_date}
 location:
    site_id: fcre
    name: Falling Creek Reservoir
@@ -55,16 +67,23 @@ default_init:
    snow_thickness: 0.0
    white_ice_thickness: 0.0
    blue_ice_thickness: 0.0
+flows_s3:
+   inflow_model_name: inflow_gefsClimAED_HOx_off
+   historical_inflow_model: historic/model_id=historical_interp_inflow_HOx_off/site_id=fcre/
+   future_inflow_model: future/model_id=inflow_gefsClimAED_HOx_off/reference_date={reference_date}/site_id=fcre/
+   historical_outflow_model: historic/model_id=historical_interp_outflow_HOx_off/site_id=fcre/
+   future_outflow_model: future/model_id=outflow_gefsClimAED_HOx_off/reference_date={reference_date}/site_id=fcre/
 flows:
    include_inflow: TRUE
    include_outflow: TRUE
-   historical_inflow_model: historical/model_id=historical_interp_inflow/site_id={site_id}
-   future_inflow_model: future/model_id=inflow-aed/reference_date={reference_date}/site_id={site_id}
-   historical_outflow_model: historical/model_id=historical_interp_outflow/site_id={site_id}
-   future_outflow_model: future/model_id=outflow-aed/reference_date={reference_date}/site_id={site_id}
+   inflow_model_name: inflow_gefsClimAED_HOx_on
+   historical_inflow_model: historic/model_id=historical_interp_inflow_HOx_on/site_id=fcre/
+   future_inflow_model: future/model_id=inflow_gefsClimAED_HOx_on/reference_date={reference_date}/site_id=fcre/
+   historical_outflow_model: historic/model_id=historical_interp_outflow_HOx_on/site_id=fcre/
+   future_outflow_model: future/model_id=outflow_gefsClimAED_HOx_on/reference_date={reference_date}/site_id=fcre/
    local_inflow_directory: drivers/inflow
-   local_outflow_directory: drivers/inflow
-   use_flows_s3: no
+   local_outflow_directory: drivers/outflow
+   use_flows_s3: FALSE
    use_ler_vars: no
 met:
    future_met_model: 'gefs-v12/stage2/reference_datetime={reference_date}/site_id={site_id}'
@@ -76,6 +95,9 @@ met:
    use_forecasted_met: TRUE
    use_ler_vars: FALSE
    forecast_lag_days: 1
+targets:
+   vera_inflow_targets: "https://amnh1.osn.mghpcc.org/bio230121-bucket01/vera4cast/targets/project_id=vera4cast/duration=P1D/daily-inflow-targets.csv.gz"
+   vera_insitu_targets: "https://amnh1.osn.mghpcc.org/bio230121-bucket01/vera4cast/targets/project_id=vera4cast/duration=P1D/daily-insitu-targets.csv.gz"
 uncertainty:
    observation: TRUE
    process: TRUE
