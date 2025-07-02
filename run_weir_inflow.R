@@ -18,9 +18,9 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
   library(tidyverse)
   library(arrow)
 
-  Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
-  Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
-  Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
+  #Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
+  #Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
+  #Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
 
   lake_directory <- here::here()
   config <- FLAREr::set_up_simulation(configure_run_file,lake_directory, config_set_name = config_set_name)
@@ -135,10 +135,15 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
 
   print('saving historical inflow forecasts for FLARE...')
 
+  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
   arrow::write_dataset(df_historical_inflow,
-                       path = arrow::s3_bucket(bucket = config$flows_save$historical_inflow_model,
-                                               endpoint_override = config$flows_save$endpoint),
+                       path = s3$path(config$flows_save$historical_inflow_model),
                        partitioning = c("model_id", "site_id"))
+
+  #arrow::write_dataset(df_historical_inflow,
+                       #path = arrow::s3_bucket(bucket = config$flows_save$historical_inflow_model,
+                                               #endpoint_override = config$flows_save$endpoint),
+                       #partitioning = c("model_id", "site_id"))
 
   #arrow::write_dataset(df, path = file.path(lake_directory, "drivers/inflow/historical/model_id=historical_interp_inflow/site_id=fcre"))
 
@@ -148,10 +153,15 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
     dplyr::filter(variable %in% c("TEMP", "FLOW")) |>
     dplyr::mutate(model_id = historic_outflow_model_id)
 
+  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
   arrow::write_dataset(df_historical_outflow,
-                       path = arrow::s3_bucket(bucket = config$flows_save$historical_outflow_model,
-                                               endpoint_override =  config$flows_save$endpoint),
+                       path = s3$path(config$flows_save$historical_outflow_model),
                        partitioning = c("model_id", "site_id"))
+
+  # arrow::write_dataset(df_historical_outflow,
+  #                      path = arrow::s3_bucket(bucket = config$flows_save$historical_outflow_model,
+  #                                              endpoint_override =  config$flows_save$endpoint),
+  #                      partitioning = c("model_id", "site_id"))
 
   #inflow_forecast_dir <- "inflow"
   #print(inflow_forecast_dir)
@@ -176,23 +186,26 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
   for(i in 1:length(inflow_variables)){
     print(i)
 
-    s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}"),
-                           endpoint_override = config$s3$vera_forecasts$endpoint,
-                           anonymous = TRUE)
+    # s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}"),
+    #                        endpoint_override = config$s3$vera_forecasts$endpoint,
+    #                        anonymous = TRUE)
+
+    s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
+    vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
+
 
     ## test to see if inflow forecast exists ##
     tryCatch({
-      df <- arrow::open_dataset(s3) |>
+      df <- arrow::open_dataset(s3$path(vera_path)) |>
         dplyr::filter(site_id == "tubr") |>
         dplyr::collect() |>
         dplyr::mutate(variable = inflow_variables[i])
     }, error = function(e) {
       stop(paste('\nInflow forecasts were not found at the following path: ',
-                 glue::glue('"',config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}\"\n"),
+                 glue::glue('"', vera_path, '"\n'),
                  'Check that inflow model is submitting all needed variables for reference_date value',
                  'Stopping workflow...',
                  sep='\n'))
-
     })
     forecast_df <- dplyr::bind_rows(forecast_df, df)
   }
@@ -263,10 +276,16 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
     dplyr::select(model_id, site_id, reference_datetime, datetime, family, parameter, variable, prediction, flow_number, reference_date)
 
   message('saving future inflow forecast...')
+
+  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
   arrow::write_dataset(glm_df_inflow,
-                       path = arrow::s3_bucket(bucket = config$flows_save$future_inflow_model,
-                                               endpoint_override =  config$flows_save$endpoint),
+                       path = s3$path(config$flows_save$future_inflow_model),
                        partitioning = c("model_id", "reference_date", "site_id"))
+
+  # arrow::write_dataset(glm_df_inflow,
+  #                      path = arrow::s3_bucket(bucket = config$flows_save$future_inflow_model,
+  #                                              endpoint_override =  config$flows_save$endpoint),
+  #                      partitioning = c("model_id", "reference_date", "site_id"))
 
   glm_df_outflow <- glm_df_inflow |>
     dplyr::select(datetime, parameter, variable, prediction) |>
@@ -281,8 +300,14 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
     dplyr::select(model_id, site_id, reference_datetime, datetime, family, parameter, variable, prediction, flow_number, reference_date)
 
   message('saving future outflow forecast...')
+
+  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
   arrow::write_dataset(glm_df_outflow,
-                       path = arrow::s3_bucket(bucket = config$flows_save$future_outflow_model,
-                                               endpoint_override =  config$flows_save$endpoint),
+                       path = s3$path(config$flows_save$future_outflow_model),
                        partitioning = c("model_id", "reference_date", "site_id"))
+
+  # arrow::write_dataset(glm_df_outflow,
+  #                      path = arrow::s3_bucket(bucket = config$flows_save$future_outflow_model,
+  #                                              endpoint_override =  config$flows_save$endpoint),
+  #                      partitioning = c("model_id", "reference_date", "site_id"))
 }
