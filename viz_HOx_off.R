@@ -19,8 +19,12 @@ viz_HOx_off <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_of
              "USE_HTTPS" = TRUE)
 
   ## read in forecast from the faasr s3 location
-  faasr_forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket,
-                                        endpoint_override = config$s3$forecasts_parquet$endpoint)
+  #faasr_forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket,
+                                        #endpoint_override = config$s3$forecasts_parquet$endpoint)
+
+  server_name <- "forecasts_parquet"
+  faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                  faasr_config = config$faasr)
 
   forecast_df <- arrow::open_dataset(faasr_forecast_s3) |>
     dplyr::filter(model_id == config$run_config$sim_name,
@@ -85,7 +89,20 @@ viz_HOx_off <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_of
     #                    object = file_name,
     #                    bucket = s3_save_path)
 
-    minioclient::mc("cp --recursive ./plots/glm_aed_flare_v3_faasr_HOx_off/
-                    s3_faasr/faasr-bucket-0001/flare/restart/fcre/glm_aed_flare_v3_faasr_HOx_on/")
+    #minioclient::mc("cp --recursive ./plots/glm_aed_flare_v3_faasr_HOx_off/
+                    #s3_faasr/faasr-bucket-0001/flare/restart/fcre/glm_aed_flare_v3_faasr_HOx_on/")
+
+  server_name <- "output_plots"
+  remote_folder <- "flare/plots/model_id=glm_aed_flare_v3_faasr_HOx_off"
+  remote_file <- basename(pdf_file_path)
+  local_folder <- dirname(pdf_file_path)
+  local_file <- basename(pdf_file_path)
+
+FaaSr::faasr_put_file(server_name = server_name,
+                      local_folder = local_folder,
+                      local_file = local_file,
+                      remote_folder = remote_folder,
+                      remote_file = remote_file,
+                      faasr_config = config$faasr)
 
 }
