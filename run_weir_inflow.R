@@ -203,13 +203,13 @@ arrow::write_dataset(df_historical_outflow,
     s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
                                    faasr_prefix = prefix,
                                    faasr_config = config$faasr)
-    
+
     vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
 
 
     ## test to see if inflow forecast exists ##
     tryCatch({
-      df <- arrow::open_dataset(s3$path(vera_path)) |>
+      df <- arrow::open_dataset(s3) |>
         dplyr::filter(site_id == "tubr") |>
         dplyr::collect() |>
         dplyr::mutate(variable = inflow_variables[i])
