@@ -198,11 +198,14 @@ arrow::write_dataset(df_historical_outflow,
     #                        endpoint_override = config$s3$vera_forecasts$endpoint,
     #                        anonymous = TRUE)
 
+    vera_base_path <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+
     server_name <- "vera_forecasts"
-    prefix <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
+    prefix <- glue::glue("{vera_base_path}/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
+
     s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                   faasr_prefix = prefix,
-                                   faasr_config = config$faasr)
+                                       faasr_prefix = prefix,
+                                       faasr_config = config$faasr)
 
     vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
 
