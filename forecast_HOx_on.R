@@ -34,9 +34,16 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   reference_date <- lubridate::as_date(config$run_config$forecast_start_datetime)
 
-  s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"),
+  #s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"),
                          endpoint_override = config$s3$vera_forecasts$endpoint,
                          anonymous = TRUE)
+
+  server_name <- "vera_forecasts"
+  prefix <- "project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"
+  s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                   faasr_prefix = prefix,
+                                   faasr_config = config$faasr)
+  
   avail_dates <- gsub("reference_date=", "", s3$ls())
 
 
@@ -57,9 +64,18 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
 
   ###############  HISTORICAL INFLOW (WILL JUST BE GRABBED FROM S3 IN THE FUTURE) #################
-  df_historical_period <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$inflow_drivers$bucket,'/',config$flows_s3$historical_inflow_model),
-                                                             endpoint_override = config$s3$inflow_drivers$endpoint,
-                                                             anonymous = TRUE)) |>
+  #df_historical_period <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$inflow_drivers$bucket,'/',config$flows_s3$historical_inflow_model),
+                                                             #endpoint_override = config$s3$inflow_drivers$endpoint,
+                                                             #anonymous = TRUE)) |>
+
+  server_name <- "inflow_drivers"
+  prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$historical_inflow_model)
+  hist_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                               faasr_prefix = prefix,
+                                               faasr_config = config$faasr)
+  df_historical_period <- arrow::open_dataset(hist_inflow_s3) |>
+
+  
     # dplyr::filter(reference_date >= model_start_date,
     #               reference_date <= forecast_start_date,#as.character.Date(config$run_config$forecast_start_datetime)
     #               model_id == 'inflow_gefsClimAED_HOx_off') |> ##
@@ -68,9 +84,17 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   ###############  FUTURE INFLOW (WILL JUST BE GRABBED FROM S3 IN THE FUTURE) #################
 
-  df_future_period <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$inflow_drivers$bucket,'/',config$flows_s3$future_inflow_model),
-                                                             endpoint_override = config$s3$inflow_drivers$endpoint,
-                                                             anonymous = TRUE)) |>
+  #df_future_period <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$inflow_drivers$bucket,'/',config$flows_s3$future_inflow_model),
+                                                             #endpoint_override = config$s3$inflow_drivers$endpoint,
+                                                             #anonymous = TRUE)) |>
+
+  server_name <- "inflow_drivers"
+  prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$future_inflow_model)
+  future_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                 faasr_prefix = prefix,
+                                                 faasr_config = config$faasr)
+  df_future_period <- arrow::open_dataset(future_inflow_s3) |>
+
     # dplyr::filter(reference_date >= model_start_date,
     #               reference_date <= forecast_start_date)#as.character.Date(config$run_config$forecast_start_datetime)) |> ##
     dplyr::collect()
@@ -105,17 +129,33 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
 
   ## read in outflow forecasts and save locally
-  df_historic_outflow <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$outflow_drivers$bucket,'/',config$flows_s3$historical_outflow_model),
-                                                           endpoint_override = config$s3$inflow_drivers$endpoint,
-                                                           anonymous = TRUE)) |>
+  #df_historic_outflow <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$outflow_drivers$bucket,'/',config$flows_s3$historical_outflow_model),
+                                                           #endpoint_override = config$s3$inflow_drivers$endpoint,
+                                                           #anonymous = TRUE)) |>
+
+  server_name <- "outflow_drivers"
+  prefix <- glue::glue(stringr::str_split_fixed(config$s3$outflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$historical_outflow_model)
+  hist_outflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                faasr_prefix = prefix,
+                                                faasr_config = config$faasr)
+  df_historic_outflow <- arrow::open_dataset(hist_outflow_s3) |>
+  
     dplyr::collect() |>
     mutate(site_id = 'fcre',
            model_id = 'historical_interp_outflow_HOx_on')
 
 
-  df_future_outflow <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$outflow_drivers$bucket,'/',config$flows_s3$future_outflow_model),
-                                                           endpoint_override = config$s3$inflow_drivers$endpoint,
-                                                           anonymous = TRUE)) |>
+ # df_future_outflow <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$outflow_drivers$bucket,'/',config$flows_s3$future_outflow_model),
+                                                          # endpoint_override = config$s3$inflow_drivers$endpoint,
+                                                           # anonymous = TRUE)) |>
+
+  server_name <- "outflow_drivers"
+  prefix <- glue::glue(stringr::str_split_fixed(config$s3$outflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$future_outflow_model)
+  future_outflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                  faasr_prefix = prefix,
+                                                  faasr_config = config$faasr)
+  df_future_outflow <- arrow::open_dataset(future_outflow_s3) |>
+  
     dplyr::collect() |>
     mutate(site_id = 'fcre',
            reference_date = as.Date(reference_datetime),
@@ -187,7 +227,10 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
   message("Scoring forecasts")
   source('./R/generate_forecast_score_arrow.R')
 
-  forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
+  #forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
+  server_name <- "forecasts_parquet"
+  forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                            faasr_config = config$faasr)
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
     dplyr::filter(model_id == config$run_config$sim_name,
@@ -200,7 +243,11 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
     past_days <- lubridate::as_date(lubridate::as_date(config$run_config$forecast_start_datetime) - lubridate::days(config$run_config$forecast_horizon))
 
     #vars <- arrow_env_vars()
-    past_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
+    #past_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
+    server_name <- "forecasts_parquet"
+    past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                        faasr_config = config$faasr)
+    
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
       dplyr::filter(model_id == config$run_config$sim_name,
