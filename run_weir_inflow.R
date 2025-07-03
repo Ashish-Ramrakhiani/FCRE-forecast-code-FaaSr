@@ -224,8 +224,7 @@ arrow::write_dataset(df_historical_outflow,
     print(config$faasr$DataStores$vera_forecasts)
 
     s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                       faasr_prefix = prefix,
-                                       faasr_config = config$faasr)
+                                       faasr_prefix = prefix)
 
     vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
 
