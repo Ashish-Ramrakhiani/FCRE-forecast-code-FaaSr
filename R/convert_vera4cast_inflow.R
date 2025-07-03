@@ -11,9 +11,15 @@ convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save
 
   for(i in 1:length(variables)){
 
-    s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}"),
-                           endpoint_override = config$s3$vera_forecasts$endpoint,
-                           anonymous = TRUE)
+    #s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}"),
+                           #endpoint_override = config$s3$vera_forecasts$endpoint,
+                           #anonymous = TRUE)
+
+  server_name <- "vera_forecasts"
+  prefix <- glue::glue("project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}")
+  s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                   faasr_prefix = prefix,
+                                   faasr_config = config$faasr)
 
     ## test to see if inflow forecast exists ##
     tryCatch({
