@@ -20,13 +20,13 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   #config$run_config$sim_name <- config_set_name (MIGHT WANT TO UPDATE SIM NAME FOR THIS SCENARIO)
 
-  Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
-  Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
-  Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
+  #Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
+  #Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
+  #Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
 
-  Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
-             "AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
-             "USE_HTTPS" = TRUE)
+  #Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
+             #"AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
+             #"USE_HTTPS" = TRUE)
 
   noaa_ready <- FLAREr::check_noaa_present(lake_directory,
                                            configure_run_file,
@@ -35,15 +35,15 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
   reference_date <- lubridate::as_date(config$run_config$forecast_start_datetime)
 
   #s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"),
-                         endpoint_override = config$s3$vera_forecasts$endpoint,
-                         anonymous = TRUE)
+                         #endpoint_override = config$s3$vera_forecasts$endpoint,
+                         #anonymous = TRUE)
 
   server_name <- "vera_forecasts"
   prefix <- "project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"
   s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
                                    faasr_prefix = prefix,
                                    faasr_config = config$faasr)
-  
+
   avail_dates <- gsub("reference_date=", "", s3$ls())
 
 
@@ -75,7 +75,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                                                faasr_config = config$faasr)
   df_historical_period <- arrow::open_dataset(hist_inflow_s3) |>
 
-  
+
     # dplyr::filter(reference_date >= model_start_date,
     #               reference_date <= forecast_start_date,#as.character.Date(config$run_config$forecast_start_datetime)
     #               model_id == 'inflow_gefsClimAED_HOx_off') |> ##
@@ -139,7 +139,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                                                 faasr_prefix = prefix,
                                                 faasr_config = config$faasr)
   df_historic_outflow <- arrow::open_dataset(hist_outflow_s3) |>
-  
+
     dplyr::collect() |>
     mutate(site_id = 'fcre',
            model_id = 'historical_interp_outflow_HOx_on')
@@ -155,7 +155,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                                                   faasr_prefix = prefix,
                                                   faasr_config = config$faasr)
   df_future_outflow <- arrow::open_dataset(future_outflow_s3) |>
-  
+
     dplyr::collect() |>
     mutate(site_id = 'fcre',
            reference_date = as.Date(reference_datetime),
@@ -247,7 +247,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
     server_name <- "forecasts_parquet"
     past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
                                         faasr_config = config$faasr)
-    
+
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
       dplyr::filter(model_id == config$run_config$sim_name,
