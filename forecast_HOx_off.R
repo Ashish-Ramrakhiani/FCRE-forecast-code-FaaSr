@@ -67,7 +67,7 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
                   depth_m = ifelse(depth_m == 0.1, 0.0, depth_m)) |>
     dplyr::rename(depth = depth_m) |>
     dplyr::filter(site_id == "fcre",
-                  datetime >= as_datetime(config$run_config$start_datetime)) |>
+                  datetime >= lubridate::as_datetime(config$run_config$start_datetime)) |>
     dplyr::mutate(datetime = lubridate::as_datetime(datetime)) |>
     readr::write_csv(file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")))
 
