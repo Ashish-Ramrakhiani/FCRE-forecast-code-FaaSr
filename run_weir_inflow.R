@@ -135,10 +135,14 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
 
   print('saving historical inflow forecasts for FLARE...')
 
-  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
+  server_name <- "inflow_drivers"
+  prefix <- stringr::str_split_fixed(config$flows_save$historical_inflow_model, "/", n = 2)[2]
+  hist_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                               faasr_prefix = prefix,
+                                               faasr_config = config$faasr)
   arrow::write_dataset(df_historical_inflow,
-                       path = s3$path(config$flows_save$historical_inflow_model),
-                       partitioning = c("model_id", "site_id"))
+                     path = hist_inflow_s3,
+                     partitioning = c("model_id", "site_id"))
 
   #arrow::write_dataset(df_historical_inflow,
                        #path = arrow::s3_bucket(bucket = config$flows_save$historical_inflow_model,
@@ -153,10 +157,14 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
     dplyr::filter(variable %in% c("TEMP", "FLOW")) |>
     dplyr::mutate(model_id = historic_outflow_model_id)
 
-  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
-  arrow::write_dataset(df_historical_outflow,
-                       path = s3$path(config$flows_save$historical_outflow_model),
-                       partitioning = c("model_id", "site_id"))
+  server_name <- "outflow_drivers"
+  prefix <- stringr::str_split_fixed(config$flows_save$historical_outflow_model, "/", n = 2)[2]
+  hist_outflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                faasr_prefix = prefix,
+                                                faasr_config = config$faasr)
+arrow::write_dataset(df_historical_outflow,
+                     path = hist_outflow_s3,
+                     partitioning = c("model_id", "site_id"))
 
   # arrow::write_dataset(df_historical_outflow,
   #                      path = arrow::s3_bucket(bucket = config$flows_save$historical_outflow_model,
@@ -190,7 +198,12 @@ run_weir_inflow <- function(configure_run_file = "configure_run.yml",
     #                        endpoint_override = config$s3$vera_forecasts$endpoint,
     #                        anonymous = TRUE)
 
-    s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
+    server_name <- "vera_forecasts"
+    prefix <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
+    s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                   faasr_prefix = prefix,
+                                   faasr_config = config$faasr)
+    
     vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
 
 
