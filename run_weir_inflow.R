@@ -198,10 +198,28 @@ arrow::write_dataset(df_historical_outflow,
     #                        endpoint_override = config$s3$vera_forecasts$endpoint,
     #                        anonymous = TRUE)
 
+    
+
     vera_base_path <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
 
     server_name <- "vera_forecasts"
     prefix <- glue::glue("{vera_base_path}/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
+
+    print(paste("Bucket base:", config$s3$vera_forecasts$bucket))
+    print(paste("Vera base path:", vera_base_path))
+    print(paste("Full prefix:", prefix))
+    print(paste("Server name:", server_name))
+    
+    # Check if the server exists in config
+    if (server_name %in% names(config$faasr$DataStores)) {
+      print("Server found in DataStores")
+      server_config <- config$faasr$DataStores[[server_name]]
+      print(paste("Server endpoint:", server_config$Endpoint))
+      print(paste("Server bucket:", server_config$Bucket))
+      print(paste("Server region:", server_config$Region))
+    } else {
+      print("WARNING: Server not found in DataStores!")
+    }
 
     s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
                                        faasr_prefix = prefix,
