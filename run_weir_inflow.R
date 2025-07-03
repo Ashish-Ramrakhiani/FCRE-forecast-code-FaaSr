@@ -237,14 +237,97 @@ arrow::write_dataset(df_historical_outflow,
         dplyr::collect() |>
         dplyr::mutate(variable = inflow_variables[i])
     }, error = function(e) {
-      stop(paste('\nInflow forecasts were not found at the following path: ',
-                 glue::glue('"', vera_path, '"\n'),
-                 'Check that inflow model is submitting all needed variables for reference_date value',
-                 'Stopping workflow...',
-                 sep='\n'))
+      print("=== DETAILED ERROR INFORMATION ===")
+      print(paste("Error class:", class(e)))
+      print(paste("Error message:", e$message))
+      
+      # Print the full error object
+      print("Full error object:")
+      print(e)
+      
+      # Print call stack if available
+      if (!is.null(e$call)) {
+        print("Error call:")
+        print(e$call)
+      }
+      
+      # Print trace if available
+      if (!is.null(e$trace)) {
+        print("Error trace:")
+        print(e$trace)
+      }
+      
+      # Try to get more details about what specifically failed
+      print("\n=== ATTEMPTING STEP-BY-STEP DEBUGGING ===")
+      
+      # Test 1: Can we create the S3 connection?
+      tryCatch({
+        print("Step 1: Testing S3 connection creation...")
+        s3_test <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                               faasr_prefix = prefix,
+                                               faasr_config = config$faasr)
+        print("S3 connection created successfully")
+        
+        # Test 2: Can we open the dataset?
+        tryCatch({
+          print("Step 2: Testing dataset opening...")
+          dataset_test <- arrow::open_dataset(s3_test)
+          print("Dataset opened successfully")
+          print(paste("Schema:", paste(names(dataset_test$schema), collapse = ", ")))
+          
+          # Test 3: Can we list some data?
+          tryCatch({
+            print("Step 3: Testing data listing...")
+            sample_data <- dataset_test |> 
+              dplyr::slice_head(n = 5) |> 
+              dplyr::collect()
+            print("Sample data retrieved successfully")
+            print(paste("Sample data columns:", paste(names(sample_data), collapse = ", ")))
+            print(paste("Unique site_ids in sample:", paste(unique(sample_data$site_id), collapse = ", ")))
+            
+            # Test 4: Can we filter by site_id?
+            tryCatch({
+              print("Step 4: Testing site_id filtering...")
+              filtered_data <- dataset_test |>
+                dplyr::filter(site_id == "tubr") |>
+                dplyr::collect()
+              print(paste("Filtered data rows:", nrow(filtered_data)))
+              
+              if (nrow(filtered_data) == 0) {
+                print("WARNING: No data found for site_id 'tubr'")
+                print("Available site_ids:")
+                all_sites <- dataset_test |> 
+                  dplyr::select(site_id) |> 
+                  dplyr::distinct() |> 
+                  dplyr::collect()
+                print(unique(all_sites$site_id))
+              }
+              
+            }, error = function(e4) {
+              print(paste("Step 4 failed - site_id filtering error:", e4$message))
+            })
+            
+          }, error = function(e3) {
+            print(paste("Step 3 failed - data listing error:", e3$message))
+          })
+          
+        }, error = function(e2) {
+          print(paste("Step 2 failed - dataset opening error:", e2$message))
+        })
+        
+      }, error = function(e1) {
+        print(paste("Step 1 failed - S3 connection error:", e1$message))
+      })
+      
+      # Now throw the original error with more context
+      stop(paste('\nDetailed error for variable:', inflow_variables[i],
+                 '\nPath:', vera_path,
+                 '\nOriginal error:', e$message,
+                 '\nStopping workflow...'))
     })
+    
     forecast_df <- dplyr::bind_rows(forecast_df, df)
-  }
+}
 
 
   FLARE_VARS <- c("parameter", "datetime", "FLOW", "TEMP", "SALT",
