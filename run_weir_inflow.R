@@ -290,9 +290,13 @@ arrow::write_dataset(df_historical_outflow,
 
   message('saving future inflow forecast...')
 
-  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
+  server_name <- "inflow_drivers"
+  prefix <- stringr::str_split_fixed(config$flows_save$future_inflow_model, "/", n = 2)[2]
+  future_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                   faasr_prefix = prefix,
+                                                   faasr_config = config$faasr)
   arrow::write_dataset(glm_df_inflow,
-                       path = s3$path(config$flows_save$future_inflow_model),
+                       path = future_inflow_s3,
                        partitioning = c("model_id", "reference_date", "site_id"))
 
   # arrow::write_dataset(glm_df_inflow,
@@ -314,9 +318,13 @@ arrow::write_dataset(df_historical_outflow,
 
   message('saving future outflow forecast...')
 
-  s3 <- faasr_arrow_s3_bucket(faasr_config = config$faasr)
+  server_name <- "outflow_drivers"
+  prefix <- stringr::str_split_fixed(config$flows_save$future_outflow_model, "/", n = 2)[2]
+  future_outflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                                    faasr_prefix = prefix,
+                                                    faasr_config = config$faasr)
   arrow::write_dataset(glm_df_outflow,
-                       path = s3$path(config$flows_save$future_outflow_model),
+                       path = future_outflow_s3,
                        partitioning = c("model_id", "reference_date", "site_id"))
 
   # arrow::write_dataset(glm_df_outflow,
