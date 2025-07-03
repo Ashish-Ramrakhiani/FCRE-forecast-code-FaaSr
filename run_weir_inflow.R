@@ -221,6 +221,8 @@ arrow::write_dataset(df_historical_outflow,
       print("WARNING: Server not found in DataStores!")
     }
 
+    print(config$faasr$DataStores$vera_forecasts)
+
     s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
                                        faasr_prefix = prefix,
                                        faasr_config = config$faasr)
