@@ -18,13 +18,13 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
                                       config_set_name = config_set_name,
                                       clean_start = TRUE)
 
-  Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
-  Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
-  Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
+  #Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
+  #Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
+  #Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
 
-  Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
-             "AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
-             "USE_HTTPS" = TRUE)
+  #Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
+             #"AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
+             #"USE_HTTPS" = TRUE)
 
   noaa_ready <- FLAREr::check_noaa_present(lake_directory,
                                            configure_run_file,
@@ -35,12 +35,15 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   #s3 <- arrow::s3_bucket(bucket = glue::glue(config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"),
                          #endpoint_override = config$s3$vera_forecasts$endpoint,
                          #anonymous = TRUE)
+
+    vera_base_path <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+    prefix <- glue::glue("{vera_base_path}/project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED")
   
-  server_name <- "vera_forecasts"
-  prefix <- "project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"
-  s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                   faasr_prefix = prefix,
-                                   faasr_config = config$faasr)
+    server_name <- "vera_forecasts"
+  
+    #prefix <- "project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"
+    s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+                                   faasr_prefix = prefix)
   
   avail_dates <- gsub("reference_date=", "", s3$ls())
 
@@ -83,8 +86,8 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   # forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
 
   server_name <- "forecasts_parquet"
-  forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                            faasr_config = config$faasr)
+  prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
+  forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
 
   
   forecast_df <- arrow::open_dataset(forecast_s3) |>
@@ -100,9 +103,10 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
 
     #vars <- arrow_env_vars()
     #past_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
+    
     server_name <- "forecasts_parquet"
-    past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                        faasr_config = config$faasr)
+    prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
+    past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
     
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
