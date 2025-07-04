@@ -138,6 +138,8 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
       dplyr::collect()
     #unset_arrow_vars(vars)
   }else{
+
+    message("reached else block")
     past_forecasts <- NULL
   }
 
