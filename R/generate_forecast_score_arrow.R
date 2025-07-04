@@ -25,7 +25,7 @@ generate_forecast_score_arrow <- function(targets_df,
                                          #endpoint_override =  endpoint)
 
     server_name <- "scores"
-  ``prefix <- stringr::str_split_fixed(bucket, "/", n = 2)[2]
+  prefix <- stringr::str_split_fixed(bucket, "/", n = 2)[2]
     output_directory <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
     
     on.exit(unset_arrow_vars(vars))
