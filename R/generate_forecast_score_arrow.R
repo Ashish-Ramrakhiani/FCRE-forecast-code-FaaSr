@@ -14,6 +14,8 @@ generate_forecast_score_arrow <- function(targets_df,
                                           local_directory = NULL,
                                           variable_types = "state"){
 
+  library(magrittr)
+
 
   if(use_s3){
     if(is.null(bucket) | is.null(endpoint)){
