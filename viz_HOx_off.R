@@ -10,21 +10,21 @@ viz_HOx_off <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_of
   lake_directory <- here::here()
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file, lake_directory = lake_directory, config_set_name = config_set_name)
 
-  Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
-  Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
-  Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
+  #Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
+  #Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
+  #Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
 
-  Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
-             "AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
-             "USE_HTTPS" = TRUE)
+  #Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
+             #"AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
+             #"USE_HTTPS" = TRUE)
 
   ## read in forecast from the faasr s3 location
   #faasr_forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket,
                                         #endpoint_override = config$s3$forecasts_parquet$endpoint)
 
   server_name <- "forecasts_parquet"
-  faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                                  faasr_config = config$faasr)
+  prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+  faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
   forecast_df <- arrow::open_dataset(faasr_forecast_s3) |>
     dplyr::filter(model_id == config$run_config$sim_name,
