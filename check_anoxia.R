@@ -54,7 +54,12 @@ forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_pref
   total_anoxia_members <- length(anoxia_indication_list)
   positive_anoxia_members <- sum(anoxia_indication_list)
 
+  print(paste("Total members:", total_anoxia_members))
+  print(paste("Positive anoxia members:", positive_anoxia_members))
+
   anoxia_member_ratio <- positive_anoxia_members/total_anoxia_members * 100
+
+  print(paste("Anoxia member ratio:", anoxia_member_ratio, "%"))
 
   if(anoxia_member_ratio >= 50){
     anoxia_indication <- TRUE
