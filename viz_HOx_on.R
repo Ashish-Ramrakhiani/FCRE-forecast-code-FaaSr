@@ -23,8 +23,8 @@ viz_HOx_off <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_on
                                         #endpoint_override = config$s3$forecasts_parquet$endpoint)
 
   server_name <- "forecasts_parquet"
-  faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                                  faasr_config = config$faasr)
+  prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+  faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
   forecast_df <- arrow::open_dataset(faasr_forecast_s3) |>
     dplyr::filter(model_id == config$run_config$sim_name,
