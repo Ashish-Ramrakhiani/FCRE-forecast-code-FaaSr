@@ -106,6 +106,10 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   
   message("opened and collected")
 
+  message("config variable")
+
+  message(config)
+
   if(config$output_settings$evaluate_past & config$run_config$use_s3){
 
     message("reached inside if cond")
