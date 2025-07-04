@@ -5,6 +5,8 @@ check_anoxia <- function(configure_run_file = "configure_run.yml",
                          config_set_name = 'glm_aed_flare_v3_faasr_HOX_off',
                          reference_datetime = config$run_config$forecast_start_datetime){
 
+  library(dplyr)
+
   lake_directory <- here::here()
 
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file, lake_directory = lake_directory, config_set_name = config_set_name)
