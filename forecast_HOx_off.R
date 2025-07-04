@@ -107,13 +107,16 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   message("opened and collected")
 
   if(config$output_settings$evaluate_past & config$run_config$use_s3){
+
+    message("reached inside if cond")
     #past_days <- lubridate::as_date(forecast_df$reference_datetime[1]) - lubridate::days(config$run_config$forecast_horizon)
     past_days <- lubridate::as_date(lubridate::as_date(config$run_config$forecast_start_datetime) - lubridate::days(config$run_config$forecast_horizon))
-
+   message("after past days")
     #vars <- arrow_env_vars()
     #past_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
     
     server_name <- "forecasts_parquet"
+    
     prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
 
     
