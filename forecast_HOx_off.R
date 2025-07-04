@@ -143,9 +143,15 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
     past_forecasts <- NULL
   }
 
+  message("before combining")
+
   combined_forecasts <- dplyr::bind_rows(forecast_df, past_forecasts)
 
+   message("before read csv")
+
   targets_df <- readr::read_csv(file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),show_col_types = FALSE)
+
+   message("before scoring")
 
   scoring <- generate_forecast_score_arrow(targets_df = targets_df,
                                            forecast_df = combined_forecasts, ## only works if dataframe returned from output
@@ -154,6 +160,8 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
                                            endpoint = config$s3$scores$endpoint,
                                            local_directory = './scores/fcre',
                                            variable_types = c("state","parameter"))
+
+   message("after scoring")
 
     # forecast_start_datetime <- lubridate::as_datetime(config$run_config$forecast_start_datetime) + lubridate::days(1)
     # start_datetime <- lubridate::as_datetime(config$run_config$forecast_start_datetime)
