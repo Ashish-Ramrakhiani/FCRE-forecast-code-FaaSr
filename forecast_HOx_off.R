@@ -121,7 +121,7 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
 
   combined_forecasts <- dplyr::bind_rows(forecast_df, past_forecasts)
 
-  targets_df <- read_csv(file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),show_col_types = FALSE)
+  targets_df <- readr::read_csv(file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),show_col_types = FALSE)
 
   scoring <- generate_forecast_score_arrow(targets_df = targets_df,
                                            forecast_df = combined_forecasts, ## only works if dataframe returned from output
