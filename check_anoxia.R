@@ -18,8 +18,8 @@ check_anoxia <- function(configure_run_file = "configure_run.yml",
                                   #endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
 
 server_name <- "forecasts_parquet"
-forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
-                                            faasr_config = config$faasr)
+prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
+forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
