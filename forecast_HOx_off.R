@@ -81,7 +81,10 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
 
   ## SCORE FORECASTS -- ADD SCORES TO FLARE bucket
   message("Scoring forecasts")
+  
   source('./R/generate_forecast_score_arrow.R')
+
+  message("sourced")
 
   # forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
 
@@ -90,12 +93,18 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
 
   
+  message("call completed arrow")
+
+  
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
     dplyr::filter(model_id == config$run_config$sim_name,
                   site_id == config$location$site_id,
                   reference_date == lubridate::as_datetime(config$run_config$forecast_start_datetime)) |>
     dplyr::collect()
+
+  
+  message("opened and collected")
 
   if(config$output_settings$evaluate_past & config$run_config$use_s3){
     #past_days <- lubridate::as_date(forecast_df$reference_datetime[1]) - lubridate::days(config$run_config$forecast_horizon)
@@ -106,7 +115,13 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
     
     server_name <- "forecasts_parquet"
     prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
+
+    
+  message("about to call arrow")
     past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
+
+    
+  message("call completed arrow")
     
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
