@@ -106,11 +106,22 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   ## add oxygenation flow
   source(file.path(lake_directory, "R", "oxygenation_inflow.R"))
+
+  message("=== DEBUG: About to call oxygenation_inflow ===")
+print(paste("df_future_period rows:", nrow(df_future_period)))
+print(paste("df_historical_period rows:", nrow(df_historical_period)))
+print(paste("Config object type:", class(config)))
+  
   oxygenation_df <- oxygenation_inflow(oxygen_data_path = './configuration/glm_aed_flare_v3_faasr_HOx_on/oxygen_data_2013_2023.csv',
                      inflow_forecast_future = df_future_period,
                      inflow_forecast_historic = df_historical_period,
                      config = config,
                      use_oxygenation = TRUE)
+
+  message("=== DEBUG: About to call oxygenation_inflow ===")
+print(paste("df_future_period rows:", nrow(df_future_period)))
+print(paste("df_historical_period rows:", nrow(df_historical_period)))
+print(paste("Config object type:", class(config)))
 
   ## combine weir inflow with oxygenation flow
   flow_combined_future <- bind_rows(df_future_period,oxygenation_df[[1]]) |>
