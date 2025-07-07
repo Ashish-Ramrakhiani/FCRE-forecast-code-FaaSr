@@ -4,6 +4,11 @@ oxygenation_inflow <- function(oxygen_data_path = './configuration/glm_aed_flare
                                config = config,
                                use_oxygenation = TRUE){
 
+library(dplyr)
+library(readr)
+library(lubridate)
+library(stringr)
+
   ### IN THE FUTURE JUST PASS IN THE FUTURE AND HISTORIC INFLOWS, SET EVERYTHING (EXCEPT DO, FLOW, TEMP) TO ZERO, AND RETURN 2 DFs
 
   forecast_start_date <- as.character.Date(config$run_config$forecast_start_datetime)
