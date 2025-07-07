@@ -1,15 +1,14 @@
-## testing
-reference_datetime <- '2025-06-05'
-
 check_anoxia <- function(configure_run_file = "configure_run.yml",
-                         config_set_name = 'glm_aed_flare_v3_faasr_HOX_off',
-                         reference_datetime = config$run_config$forecast_start_datetime){
+                         config_set_name = 'glm_aed_flare_v3_faasr_HOx_off',
+                         percentage_threshold = 20){
 
   library(dplyr)
 
   lake_directory <- here::here()
 
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file, lake_directory = lake_directory, config_set_name = config_set_name)
+
+  reference_datetime <- config$run_config$forecast_start_datetime
 
   #config_set_name <- config$run_config$sim_name
 
@@ -23,7 +22,7 @@ forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_pref
 
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
-    dplyr::filter(model_id == 'glm_aed_flare_v3',
+    dplyr::filter(model_id == 'glm_aed_flare_v3_faasr_HOx_off',
                   site_id == config$location$site_id,
                   variable == 'DO_mgL_mean',
                   reference_date == lubridate::as_datetime(reference_datetime)) |>
@@ -49,26 +48,17 @@ forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_pref
 
   }
 
-  ## ASSUME THAT >50% OF ENSEMBLE MEMBERS NEED TO INDICATE ANOXIA TO TRIGGER OXYGENATION RUN
-
   total_anoxia_members <- length(anoxia_indication_list)
   positive_anoxia_members <- sum(anoxia_indication_list)
 
-  print(paste("Total members:", total_anoxia_members))
-  print(paste("Positive anoxia members:", positive_anoxia_members))
-
   anoxia_member_ratio <- positive_anoxia_members/total_anoxia_members * 100
 
-  print(paste("Anoxia member ratio:", anoxia_member_ratio, "%"))
-
-  if(anoxia_member_ratio >= 50){
+  if(anoxia_member_ratio >= percentage_threshold){
     anoxia_indication <- TRUE
   } else{
     anoxia_indication <- FALSE
   }
 
   return(anoxia_indication)
-
-  #ggplot(forecast_df, aes(x = datetime, y = prediction, group = parameter)) + geom_line()
 
 }
