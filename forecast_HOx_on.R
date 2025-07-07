@@ -4,6 +4,13 @@
 
 forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                             config_set_name = 'glm_aed_flare_v3_faasr_HOx_on'){
+
+
+  library(dplyr)
+  library(lubridate)
+  library(readr)
+
+  
   # requires tidyverse and lubridate
 
   Sys.setenv('GLM_PATH'='GLM3r')
@@ -225,7 +232,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   #forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
   server_name <- "forecasts_parquet"
-  prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+  prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
   forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix=prefix)
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
