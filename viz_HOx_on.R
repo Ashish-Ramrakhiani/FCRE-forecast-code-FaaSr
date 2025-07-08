@@ -1,4 +1,4 @@
-viz_HOx_off <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_on',
+viz_HOx_on <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_on',
                         configure_run_file = "configure_run.yml",
                         config_set_name = 'glm_aed_flare_v3_faasr_HOx_on',
                         target_url = 'https://amnh1.osn.mghpcc.org/bio230121-bucket01/vera4cast/targets/project_id=vera4cast/duration=P1D/daily-insitu-targets.csv.gz'){
