@@ -1,5 +1,7 @@
 update_restart_file <- function(config_run_file, config_set_name){
 
+  library(lubridate)
+
   lake_directory <- here::here()
 
   ## We want to update the HOx_off restart file
