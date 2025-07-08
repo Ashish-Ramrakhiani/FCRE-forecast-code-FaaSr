@@ -28,5 +28,6 @@ update_restart_file <- function(config_run_file, config_set_name){
                             use_s3 = config$run_config$use_s3,
                             bucket = config$s3$restart$bucket,
                             endpoint = config$s3$restart$endpoint,
+                            config = config,
                             use_https = TRUE)
 }
