@@ -3,6 +3,12 @@ viz_HOx_on <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_on'
                         config_set_name = 'glm_aed_flare_v3_faasr_HOx_on',
                         target_url = 'https://amnh1.osn.mghpcc.org/bio230121-bucket01/vera4cast/targets/project_id=vera4cast/duration=P1D/daily-insitu-targets.csv.gz'){
 
+library(dplyr)     # filter, collect, rename, left_join, join_by
+library(readr)     # read_csv
+library(ggplot2)   # ggplot, geom_line, geom_vline, theme_bw, etc.
+library(glue)      # glue
+library(stringr)   # str_split_fixed
+
   # Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv("OSN_KEY"),
   #            'AWS_SECRET_ACCESS_KEY' = Sys.getenv('OSN_SECRET'))
 
@@ -10,20 +16,20 @@ viz_HOx_on <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_on'
   lake_directory <- here::here()
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file, lake_directory = lake_directory, config_set_name = config_set_name)
 
-  Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
-  Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
-  Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
+  #Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
+  #Sys.setenv('AWS_SECRET_ACCESS_KEY' = Sys.getenv('AWS_SECRET_ACCESS_KEY_FAASR'))
+  #Sys.setenv("AWS_DEFAULT_REGION" = "us-west-2")
 
-  Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
-             "AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
-             "USE_HTTPS" = TRUE)
+  #Sys.setenv("AWS_DEFAULT_REGION" = config$s3$set_up$region,
+             #"AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
+             #"USE_HTTPS" = TRUE)
 
   ## read in forecast from the faasr s3 location
   #faasr_forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket,
                                         #endpoint_override = config$s3$forecasts_parquet$endpoint)
 
   server_name <- "forecasts_parquet"
-  prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+  prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
   faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
   forecast_df <- arrow::open_dataset(faasr_forecast_s3) |>
@@ -86,8 +92,7 @@ viz_HOx_on <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_on'
   s3_save_path <- glue::glue('https://',config$s3$output_plots$endpoint,'/',config$s3$output_plots$bucket)
   #arrow::write_csv_arrow(pdf_file_name, sink = plot_s3$path(file_name))
 
-  file_name = glue::glue('flare/plots/model_id=glm_aed_flare_v3_faasr_HOx_on/',
-                         file_name)
+  file_name = glue::glue('flare/plots/model_id=glm_aed_flare_v3_faasr_HOx_on/',file_name)
   server_name <- "output_plots"
   remote_folder <- "flare/plots/model_id=glm_aed_flare_v3_faasr_HOx_on"
   remote_file <- basename(pdf_file_path)
