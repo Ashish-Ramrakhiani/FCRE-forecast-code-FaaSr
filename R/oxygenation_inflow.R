@@ -76,6 +76,14 @@ library(stringr)
 
 
   ## FUTURE INFLOW FOR DO MANIPULATION
+
+  print("=== DEBUG: inflow_forecast_future columns ===")
+print(names(inflow_forecast_future))
+print("=== DEBUG: inflow_forecast_historic columns ===") 
+print(names(inflow_forecast_historic))
+print(paste("forecast_start_date:", forecast_start_date))
+
+  
   oxygen_inflow_future <- inflow_forecast_future |>
     mutate(flow_number = 2) |>
     filter(reference_date >= forecast_start_date)#,
