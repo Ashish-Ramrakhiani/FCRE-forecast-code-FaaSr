@@ -61,8 +61,28 @@ library(stringr)   # str_split_fixed
   combined_df <- left_join(forecast_df, targets_df, by = join_by(datetime, site_id, depth, variable)) |>
     filter(depth == 9)
 
+  print(paste("combined_df rows:", nrow(combined_df)))
+  print(paste("combined_df parameter values:", paste(unique(combined_df$parameter)[1:min(10, length(unique(combined_df$parameter)))], collapse = ", ")))
+  
+  # Check if combined_df has data
+  if (nrow(combined_df) == 0) {
+    stop("No data in combined_df after filtering. Check that forecast_df and targets_df have matching data.")
+  }
+  
+  # Check if parameter column exists and has valid values
+  if (!"parameter" %in% names(combined_df)) {
+    stop("'parameter' column not found in combined_df")
+  }
+  
+  if (all(is.na(combined_df$parameter))) {
+    stop("All parameter values are NA")
+  }
+  
+
   focal_depths_plotting <- unique(combined_df$depth)
   max_ensembles <- max(combined_df$parameter)
+
+  print(paste("max_ensembles:", max_ensembles))
 
   focal_ensemebles <- 1:min(c(10, max_ensembles))
 
