@@ -4,7 +4,7 @@ update_restart_file <- function(config_run_file, config_set_name){
 
   ## We want to update the HOx_off restart file
 
-  config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file,
+  config <- FLAREr::set_up_simulation(configure_run_file = config_run_file,
                                       lake_directory = lake_directory,
                                       config_set_name = config_set_name)
 
@@ -13,7 +13,7 @@ update_restart_file <- function(config_run_file, config_set_name){
   restart_file <- paste0(config$location$site_id,"-", (lubridate::as_date(forecast_start_datetime)- days(1)), "-",config$run_config$sim_name ,".nc")
 
   FLAREr::update_run_config(lake_directory = lake_directory,
-                            configure_run_file = configure_run_file,
+                            configure_run_file = config_run_file,
                             restart_file = restart_file,
                             start_datetime = start_datetime,
                             end_datetime = NA,
