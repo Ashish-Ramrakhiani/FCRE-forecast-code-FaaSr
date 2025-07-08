@@ -86,7 +86,7 @@ print(paste("forecast_start_date:", forecast_start_date))
   
   oxygen_inflow_future <- inflow_forecast_future |>
     mutate(flow_number = 2) |>
-    filter(reference_date >= forecast_start_date)#,
+    filter(reference_datetime >= forecast_start_date)#,
            #variable %in% c('OXY_oxy', 'FLOW', 'TEMP'))
 
   oxygen_inflow_future$prediction <- ifelse(oxygen_inflow_future$variable == 'OXY_oxy',
