@@ -1,4 +1,4 @@
-udpate_restart_file <- function(config_run_file, config_set_name){
+update_restart_file <- function(config_run_file, config_set_name){
 
   lake_directory <- here::here()
 
