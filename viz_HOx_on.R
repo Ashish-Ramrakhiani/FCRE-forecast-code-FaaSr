@@ -123,8 +123,7 @@ FaaSr::faasr_put_file(server_name = server_name,
                       local_folder = local_folder,
                       local_file = local_file,
                       remote_folder = remote_folder,
-                      remote_file = remote_file,
-                      faasr_config = config$faasr)
+                      remote_file = remote_file)
   
   #aws.s3::put_object(file = pdf_file_path,
                      #object = file_name,
