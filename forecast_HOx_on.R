@@ -245,7 +245,11 @@ print(paste("Config object type:", class(config)))
   # config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file, lake_directory = lake_directory, config_set_name = config_set_name, clean_start = TRUE)
   # config$flows$use_flows_s3 <- FALSE
 
+  message("before run flare")
+
   FLAREr::run_flare(lake_directory = lake_directory, configure_run_file = configure_run_file, config_set_name = config_set_name)
+
+   message("after run flare")
 
   ## SCORE FORECASTS -- ADD SCORES TO FLARE bucket
   message("Scoring forecasts")
