@@ -35,9 +35,13 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
              #"AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
              #"USE_HTTPS" = TRUE)
 
+    message("noaa ready call not done")
+
   noaa_ready <- FLAREr::check_noaa_present(lake_directory,
                                            configure_run_file,
                                            config_set_name = config_set_name)
+
+  message("noaa ready call done")
 
   reference_date <- lubridate::as_date(config$run_config$forecast_start_datetime)
 
