@@ -41,6 +41,8 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                                            configure_run_file,
                                            config_set_name = config_set_name)
 
+  message(noaa_ready)
+
   message("noaa ready call done")
 
   reference_date <- lubridate::as_date(config$run_config$forecast_start_datetime)
