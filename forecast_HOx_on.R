@@ -75,6 +75,8 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                                                              #endpoint_override = config$s3$inflow_drivers$endpoint,
                                                              #anonymous = TRUE)) |>
 
+  print(paste("made it till this inflow drivers call"))
+
   server_name <- "inflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$historical_inflow_model)
   hist_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
