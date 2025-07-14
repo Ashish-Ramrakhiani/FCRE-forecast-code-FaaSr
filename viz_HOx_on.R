@@ -58,6 +58,11 @@ library(stringr)   # str_split_fixed
 
   pdf_file_path <- file.path(plots_directory, file_name)
 
+  if(!dir.exists(plots_directory)) {
+  dir.create(plots_directory, recursive = TRUE)
+  cat("Created directory:", plots_directory, "\n")
+}
+
   combined_df <- left_join(forecast_df, targets_df, by = join_by(datetime, site_id, depth, variable)) |>
     filter(depth == 9)
 
