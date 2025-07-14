@@ -30,7 +30,7 @@ library(stringr)   # str_split_fixed
                                         #endpoint_override = config$s3$forecasts_parquet$endpoint)
 
   server_name <- "forecasts_parquet"
-  prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
+  prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
   faasr_forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
   forecast_df <- arrow::open_dataset(faasr_forecast_s3) |>
