@@ -3,6 +3,13 @@ viz_HOx_off <- function(plots_directory = './plots/glm_aed_flare_v3_faasr_HOx_of
                         config_set_name = 'glm_aed_flare_v3_faasr_HOx_off',
                         target_url = 'https://amnh1.osn.mghpcc.org/bio230121-bucket01/vera4cast/targets/project_id=vera4cast/duration=P1D/daily-insitu-targets.csv.gz'){
 
+library(dplyr)     # filter, collect, rename, left_join, join_by
+library(readr)     # read_csv
+library(ggplot2)   # ggplot, geom_line, geom_vline, theme_bw, etc.
+library(glue)      # glue
+library(stringr)   # str_split_fixed
+
+
   # Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv("OSN_KEY"),
   #            'AWS_SECRET_ACCESS_KEY' = Sys.getenv('OSN_SECRET'))
 
