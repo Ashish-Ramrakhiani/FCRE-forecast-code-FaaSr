@@ -35,15 +35,9 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
              #"AWS_S3_ENDPOINT" = config$s3$set_up$endpoint,
              #"USE_HTTPS" = TRUE)
 
-    message("noaa ready call not done")
-
   noaa_ready <- FLAREr::check_noaa_present(lake_directory,
                                            configure_run_file,
-                                           config_set_name = config_set_name)
-
-  message(noaa_ready)
-
-  message("noaa ready call done")
+                                           config_set_name = config_set_name) 
 
   reference_date <- lubridate::as_date(config$run_config$forecast_start_datetime)
 
@@ -66,9 +60,6 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
     inflow_ready <- FALSE
   }
 
-  message(paste0("noaa ready: ", noaa_ready))
-  message(paste0("inflow ready: ", inflow_ready))
-
   #while(noaa_ready & inflow_ready){
 
   forecast_start_date <- as.character.Date(config$run_config$forecast_start_datetime)
@@ -80,8 +71,6 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
   #df_historical_period <- arrow::open_dataset(arrow::s3_bucket(bucket = glue::glue(config$s3$inflow_drivers$bucket,'/',config$flows_s3$historical_inflow_model),
                                                              #endpoint_override = config$s3$inflow_drivers$endpoint,
                                                              #anonymous = TRUE)) |>
-
-  print(paste("made it till this inflow drivers call"))
 
   server_name <- "inflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$historical_inflow_model)
@@ -102,8 +91,6 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
                                                              #endpoint_override = config$s3$inflow_drivers$endpoint,
                                                              #anonymous = TRUE)) |>
 
-  print(paste("made it till this call"))
-
   server_name <- "inflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$future_inflow_model)
   future_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
@@ -116,22 +103,12 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   ## add oxygenation flow
   source(file.path(lake_directory, "R", "oxygenation_inflow.R"))
-
-  message("=== DEBUG: About to call oxygenation_inflow ===")
-print(paste("df_future_period rows:", nrow(df_future_period)))
-print(paste("df_historical_period rows:", nrow(df_historical_period)))
-print(paste("Config object type:", class(config)))
   
   oxygenation_df <- oxygenation_inflow(oxygen_data_path = './configuration/glm_aed_flare_v3_faasr_HOx_on/oxygen_data_2013_2023.csv',
                      inflow_forecast_future = df_future_period,
                      inflow_forecast_historic = df_historical_period,
                      config = config,
                      use_oxygenation = TRUE)
-
-  message("=== DEBUG: About to call oxygenation_inflow ===")
-print(paste("df_future_period rows:", nrow(df_future_period)))
-print(paste("df_historical_period rows:", nrow(df_historical_period)))
-print(paste("Config object type:", class(config)))
 
   ## combine weir inflow with oxygenation flow
   flow_combined_future <- bind_rows(df_future_period,oxygenation_df[[1]]) |>
@@ -144,7 +121,6 @@ print(paste("Config object type:", class(config)))
            site_id = 'fcre')
 
   ## save combined inflows locally
-  message('saving inflow forecasts locally...')
   arrow::write_dataset(flow_combined_future,
                        path = file.path(config$flows$local_inflow_directory,'future'),
                        partitioning = c("model_id", "reference_date", "site_id"))
@@ -245,11 +221,8 @@ print(paste("Config object type:", class(config)))
   # config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file, lake_directory = lake_directory, config_set_name = config_set_name, clean_start = TRUE)
   # config$flows$use_flows_s3 <- FALSE
 
-  message("before run flare")
 
   FLAREr::run_flare(lake_directory = lake_directory, configure_run_file = configure_run_file, config_set_name = config_set_name)
-
-   message("after run flare")
 
   ## SCORE FORECASTS -- ADD SCORES TO FLARE bucket
   message("Scoring forecasts")
