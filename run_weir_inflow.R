@@ -217,8 +217,7 @@ arrow::write_dataset(df_historical_outflow,
         dplyr::filter(site_id == "tubr") |>
         dplyr::collect() |>
         dplyr::mutate(variable = inflow_variables[i])
-    }, error = function(e) {
-
+    },
       error = function(e) {
       stop(paste('\nInflow forecasts were not found at the following path: ',
                  glue::glue('"',config$s3$vera_forecasts$bucket,"/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}\"\n"),
