@@ -39,4 +39,43 @@ check_notify <- function(){
      notify = FALSE
    }
 
+  notification_datetime <- Sys.time()
+  notification_timestamp <- format(notification_datetime, "%Y%m%d_%H%M%S")
+  
+  # Create notification content
+  notification_content <- paste0(
+    "FaaSr Check Notify Status\n",
+    "========================\n",
+    "Timestamp: ", notification_datetime, "\n",
+    "Notify Status: ", notify, "\n",
+    "HOx forecast rows found: ", nrow(hox_on_df), "\n",
+    "Model ID checked: glm_aed_flare_v3_faasr_HOx_ots\n",
+    "Site ID: ", config$location$site_id, "\n"
+  )
+  
+  # Write to local file
+  local_folder <- "."
+  local_file <- paste0("notify_status_", notification_timestamp, ".txt")
+  writeLines(notification_content, file.path(local_folder, local_file))
+  
+  # Upload to S3
+  server_name_upload <- "My_S3_Bucket"
+  remote_folder <- "notifications"
+  remote_file <- paste0("notify_status_", notification_timestamp, ".txt")
+  
+  FaaSr::faasr_put_file(
+    server_name = server_name_upload,
+    local_folder = local_folder,
+    local_file = local_file,
+    remote_folder = remote_folder,
+    remote_file = remote_file
+  )
+  
+  # Clean up local file
+  file.remove(file.path(local_folder, local_file))
+  
+  print(paste0("Notification status file uploaded: notify=", notify, ", file=", remote_file))
+  
+  return(notify)
+
 }
