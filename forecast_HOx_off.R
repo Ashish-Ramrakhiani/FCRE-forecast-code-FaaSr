@@ -54,9 +54,6 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
     inflow_ready <- FALSE
   }
 
-  message(paste0("noaa ready: ", noaa_ready))
-  message(paste0("inflow ready: ", inflow_ready))
-
   #while(noaa_ready & inflow_ready){
 
     #source(file.path(lake_directory, "workflows", config_set_name, "generate_inflow_forecast.R"))
@@ -84,17 +81,11 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   
   source('./R/generate_forecast_score_arrow.R')
 
-  message("sourced")
-
   # forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
 
   server_name <- "forecasts_parquet"
   prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
   forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
-
-  
-  message("call completed arrow")
-
   
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
@@ -103,32 +94,18 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
                   reference_date == lubridate::as_datetime(config$run_config$forecast_start_datetime)) |>
     dplyr::collect()
 
-  
-  message("opened and collected")
-
-  message("config variable")
-
-  message(config)
-
   if(config$output_settings$evaluate_past & config$run_config$use_s3){
 
-    message("reached inside if cond")
     #past_days <- lubridate::as_date(forecast_df$reference_datetime[1]) - lubridate::days(config$run_config$forecast_horizon)
     past_days <- lubridate::as_date(lubridate::as_date(config$run_config$forecast_start_datetime) - lubridate::days(config$run_config$forecast_horizon))
-   message("after past days")
+    
     #vars <- arrow_env_vars()
     #past_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
-    
-    server_name <- "forecasts_parquet"
+  
     
     prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
 
-    
-  message("about to call arrow")
     past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
-
-    
-  message("call completed arrow")
     
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
@@ -138,20 +115,15 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
       dplyr::collect()
     #unset_arrow_vars(vars)
   }else{
-
-    message("reached else block")
+    
     past_forecasts <- NULL
   }
 
-  message("before combining")
 
   combined_forecasts <- dplyr::bind_rows(forecast_df, past_forecasts)
 
-   message("before read csv")
 
   targets_df <- readr::read_csv(file.path(config$file_path$qaqc_data_directory,paste0(config$location$site_id, "-targets-insitu.csv")),show_col_types = FALSE)
-
-   message("before scoring")
 
   scoring <- generate_forecast_score_arrow(targets_df = targets_df,
                                            forecast_df = combined_forecasts, ## only works if dataframe returned from output
@@ -160,8 +132,6 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
                                            endpoint = config$s3$scores$endpoint,
                                            local_directory = './scores/fcre',
                                            variable_types = c("state","parameter"))
-
-   message("after scoring")
 
     # forecast_start_datetime <- lubridate::as_datetime(config$run_config$forecast_start_datetime) + lubridate::days(1)
     # start_datetime <- lubridate::as_datetime(config$run_config$forecast_start_datetime)
