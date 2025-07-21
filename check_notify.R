@@ -5,12 +5,16 @@ check_notify <- function(){
   ## send email or slack communication
 
   lake_directory <- here::here()
+
+  configure_run_file <- "configure_run.yml"
+
+  config_set_name <- 'glm_aed_flare_v3_faasr_HOx_off'
   #
   # ## We want to update the HOx_off restart file
   #
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file,
-  #                                     lake_directory = lake_directory,
-  #                                     config_set_name = config_set_name)
+                                      lake_directory = lake_directory,
+                                      config_set_name = config_set_name)
 
   server_name <- "forecasts_parquet"
   prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
