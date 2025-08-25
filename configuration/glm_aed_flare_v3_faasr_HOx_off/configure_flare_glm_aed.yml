@@ -28,7 +28,7 @@ s3:
     bucket: faasr-bucket-0001/flare/scores/parquet
   vera_forecasts:
     endpoint: amnh1.osn.mghpcc.org
-    bucket: bio230121-bucket01/vera4cast/forecasts/parquet
+    bucket: bio230121-bucket01/vera4cast/forecasts/archive-parquet
   output_plots:
     endpoint: s3.us-west-2.amazonaws.com
     bucket: faasr-bucket-0001/flare/model_id=glm_aed_flare_v3_faasr_HOx_off/reference_date={reference_date}
