@@ -268,6 +268,7 @@ cat("Successfully created S3 bucket connection\n")
 
   glm_df_inflow <- forecast_df |>
     dplyr::select(datetime, variable, prediction, parameter) |>
+    dplyr::distinct(datetime, variable, parameter, .keep_all = TRUE) |>
     tidyr::pivot_wider(names_from = variable, values_from = prediction) |>
     dplyr::rename(TEMP = Temp_C_mean,
                   FLOW = Flow_cms_mean) |>
