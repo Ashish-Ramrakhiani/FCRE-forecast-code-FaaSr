@@ -17,7 +17,7 @@ convert_vera4cast_inflow <- function(reference_date, model_id, save_bucket, save
 
   server_name <- "vera_forecasts"
   prefix <- glue::glue("project_id=vera4cast/duration=P1D/variable={variables[i]}/model_id={model_id}/reference_date={reference_date}")
-  s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+  s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                    faasr_prefix = prefix,
                                    faasr_config = config$faasr)
 
