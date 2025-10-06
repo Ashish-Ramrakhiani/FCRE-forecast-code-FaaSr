@@ -13,6 +13,51 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   lake_directory <- here::here()
   #config_set_name <- config$run_config$sim_name
 
+  # Log the starting directory
+  initial_wd <- getwd()
+  cat("\n=== DEBUG: initial_working_dir:", initial_wd, "===\n")
+  
+  # List all directories to see what we have
+  all_dirs <- list.dirs(".", recursive = TRUE, full.names = TRUE)
+  cat("=== DEBUG: total_dirs_found:", length(all_dirs), "===\n")
+  
+  # Search for configuration directory
+  config_dirs <- all_dirs[grepl("configuration", all_dirs)]
+  cat("=== DEBUG: config_dirs_found:", length(config_dirs), "===\n")
+  
+  if (length(config_dirs) > 0) {
+    cat("=== DEBUG: first_config_dir:", config_dirs[1], "===\n")
+    repo_root <- dirname(config_dirs[1])
+    
+    # Try to change directory and verify
+    tryCatch({
+      setwd(repo_root)
+      new_wd <- getwd()
+      cat("=== DEBUG: new_working_dir:", new_wd, "===\n")
+    }, error = function(e) {
+      cat("=== ERROR: setwd failed:", e$message, "===\n")
+    })
+  } else {
+    # If no config dirs found, try looking in parent directories or /tmp/functions/
+    cat("=== DEBUG: config_search - searching /tmp/functions ===\n")
+    tmp_dirs <- list.dirs("/tmp/functions", recursive = TRUE, full.names = TRUE)
+    config_dirs_tmp <- tmp_dirs[grepl("configuration", tmp_dirs)]
+    
+    if (length(config_dirs_tmp) > 0) {
+      cat("=== DEBUG: found_in_tmp:", config_dirs_tmp[1], "===\n")
+      repo_root <- dirname(config_dirs_tmp[1])
+      setwd(repo_root)
+      cat("=== DEBUG: new_working_dir:", getwd(), "===\n")
+    } else {
+      cat("=== ERROR: No configuration directory found anywhere! ===\n")
+    }
+  }
+  
+  # Final working directory check
+  cat("=== DEBUG: final_working_dir before FLARE call:", getwd(), "===\n")
+
+ lake_directory <- getwd()
+
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file,
                                       lake_directory = lake_directory,
                                       config_set_name = config_set_name,
@@ -42,7 +87,7 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
     server_name <- "vera_forecasts"
   
     #prefix <- "project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"
-    s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+    s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                    faasr_prefix = prefix)
   
   avail_dates <- gsub("reference_date=", "", s3$ls())
@@ -85,7 +130,7 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
 
   server_name <- "forecasts_parquet"
   prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
-  forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
+  forecast_s3 <- faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
   
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
@@ -105,7 +150,7 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
     
     prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
 
-    past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
+    past_s3 <- faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix = prefix)
     
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
