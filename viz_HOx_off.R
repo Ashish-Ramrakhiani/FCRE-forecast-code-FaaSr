@@ -153,8 +153,16 @@ library(stringr)   # str_split_fixed
   server_name <- "output_plots"
   remote_folder <- "flare/plots/model_id=glm_aed_flare_v3_faasr_HOx_off"
   remote_file <- basename(pdf_file_path)
-  local_folder <- dirname(pdf_file_path)
-  local_file <- basename(pdf_file_path)
+
+  pdf_file_absolute <- normalizePath(pdf_file_path, mustWork = FALSE)
+  
+  # Verify file exists before uploading
+  if (!file.exists(pdf_file_absolute)) {
+    stop(paste("PDF file was not created:", pdf_file_absolute))
+  }
+  
+  local_folder <- dirname(pdf_file_absolute)
+  local_file <- basename(pdf_file_absolute)
 
 faasr_put_file(server_name = server_name,
                       local_folder = local_folder,
