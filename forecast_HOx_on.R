@@ -20,6 +20,51 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
   lake_directory <- here::here()
   #config_set_name <- config$run_config$sim_name
 
+  # Log the starting directory
+  initial_wd <- getwd()
+  cat("\n=== DEBUG: initial_working_dir:", initial_wd, "===\n")
+  
+  # List all directories to see what we have
+  all_dirs <- list.dirs(".", recursive = TRUE, full.names = TRUE)
+  cat("=== DEBUG: total_dirs_found:", length(all_dirs), "===\n")
+  
+  # Search for configuration directory
+  config_dirs <- all_dirs[grepl("configuration", all_dirs)]
+  cat("=== DEBUG: config_dirs_found:", length(config_dirs), "===\n")
+  
+  if (length(config_dirs) > 0) {
+    cat("=== DEBUG: first_config_dir:", config_dirs[1], "===\n")
+    repo_root <- dirname(config_dirs[1])
+    
+    # Try to change directory and verify
+    tryCatch({
+      setwd(repo_root)
+      new_wd <- getwd()
+      cat("=== DEBUG: new_working_dir:", new_wd, "===\n")
+    }, error = function(e) {
+      cat("=== ERROR: setwd failed:", e$message, "===\n")
+    })
+  } else {
+    # If no config dirs found, try looking in parent directories or /tmp/functions/
+    cat("=== DEBUG: config_search - searching /tmp/functions ===\n")
+    tmp_dirs <- list.dirs("/tmp/functions", recursive = TRUE, full.names = TRUE)
+    config_dirs_tmp <- tmp_dirs[grepl("configuration", tmp_dirs)]
+    
+    if (length(config_dirs_tmp) > 0) {
+      cat("=== DEBUG: found_in_tmp:", config_dirs_tmp[1], "===\n")
+      repo_root <- dirname(config_dirs_tmp[1])
+      setwd(repo_root)
+      cat("=== DEBUG: new_working_dir:", getwd(), "===\n")
+    } else {
+      cat("=== ERROR: No configuration directory found anywhere! ===\n")
+    }
+  }
+  
+  # Final working directory check
+  cat("=== DEBUG: final_working_dir before FLARE call:", getwd(), "===\n")
+
+ lake_directory <- getwd()
+
   config <- FLAREr::set_up_simulation(configure_run_file = configure_run_file,
                                       lake_directory = lake_directory,
                                       config_set_name = config_set_name,
@@ -48,7 +93,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
   server_name <- "vera_forecasts"
   prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
   #prefix <- "project_id=vera4cast/duration=P1D/variable=Temp_C_mean/model_id=inflow_gefsClimAED"
-  s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+  s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                    faasr_prefix = prefix)
 
   avail_dates <- gsub("reference_date=", "", s3$ls())
@@ -74,7 +119,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   server_name <- "inflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$historical_inflow_model)
-  hist_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+  hist_inflow_s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                                faasr_prefix = prefix)
   df_historical_period <- arrow::open_dataset(hist_inflow_s3) |>
 
@@ -93,7 +138,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   server_name <- "inflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$inflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$future_inflow_model)
-  future_inflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+  future_inflow_s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                                  faasr_prefix = prefix)
   df_future_period <- arrow::open_dataset(future_inflow_s3) |>
 
@@ -137,7 +182,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   server_name <- "outflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$outflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$historical_outflow_model)
-  hist_outflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+  hist_outflow_s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                                 faasr_prefix = prefix)
   df_historic_outflow <- arrow::open_dataset(hist_outflow_s3) |>
 
@@ -152,7 +197,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
 
   server_name <- "outflow_drivers"
   prefix <- glue::glue(stringr::str_split_fixed(config$s3$outflow_drivers$bucket, "/", n = 2)[2], "/", config$flows_s3$future_outflow_model)
-  future_outflow_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,
+  future_outflow_s3 <- faasr_arrow_s3_bucket(server_name = server_name,
                                                   faasr_prefix = prefix)
   df_future_outflow <- arrow::open_dataset(future_outflow_s3) |>
 
@@ -231,7 +276,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
   #forecast_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
   server_name <- "forecasts_parquet"
   prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
-  forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix=prefix)
+  forecast_s3 <- faasr_arrow_s3_bucket(server_name = server_name, faasr_prefix=prefix)
   forecast_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
     dplyr::filter(model_id == config$run_config$sim_name,
@@ -247,7 +292,7 @@ forecast_HOx_on <- function(configure_run_file = "configure_run.yml",
     #past_s3 <- arrow::s3_bucket(bucket = config$s3$forecasts_parquet$bucket, endpoint_override = config$s3$forecasts_parquet$endpoint, anonymous = TRUE)
     server_name <- "forecasts_parquet"
     prefix <- stringr::str_split_fixed(config$s3$vera_forecasts$bucket, "/", n = 2)[2]
-    past_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
+    past_s3 <- faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
     past_forecasts <- arrow::open_dataset(past_s3) |>
       dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
