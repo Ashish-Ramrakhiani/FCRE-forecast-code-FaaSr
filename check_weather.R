@@ -42,6 +42,8 @@ check_weather <- function(lake_directory, configure_run_file, config_set_name){
   
   # Final working directory check
   cat("=== DEBUG: final_working_dir before FLARE call:", getwd(), "===\n")
+
+ lake_directory <- getwd()
   
   # CRITICAL: Wrap the FLARE function call in error handling
   weather_ready <- tryCatch({
