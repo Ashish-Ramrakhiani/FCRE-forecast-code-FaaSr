@@ -3,6 +3,19 @@
 
 ## FOCUS ON MAKING FLARE COMPLETELY FULLY DEPENDENT ON S3 ACROSS FUNCTIONS (ASSUME THAT NO OUTPUT FROM FUNCTIONS WILL BE SAVED LOCALLY)
 ## S3 PATHS CAN BE SPECIFIED IN THE FLARE CONFIG::
+## USE S3 PATHS AS THEY ARE IN THE CONFIG, BUT CAN ALSO ACCESS FAASR SPECIFIC CONFIGS WITH [config$faasr...]
+
+
+run_weir_inflow <- function(configure_run_file = "configure_run.yml",
+                            config_set_name = 'glm_aed_flare_v3_faasr_HOx_off',
+                            #vera_insitu_targets_s3 = 'https://amnh1.osn.mghpcc.org/bio230121-bucket01/vera4cast/targets/project_id=vera4cast/duration=P1D/daily-inflow-targets.csv.gz',
+                            original_inflow_model = 'inflow_gefsClimAED',
+                            inflow_model_id = "inflow_gefsClimAED_HOx_off",
+                            outflow_model_id = "outflow_gefsClimAED_HOx_off",
+                            historic_inflow_model_id = "historical_interp_inflow_HOx_off",
+                            historic_outflow_model_id = "historical_interp_outflow_HOx_off"){
+
+  library(tidyverse)
   library(arrow)
 
   #Sys.setenv('AWS_ACCESS_KEY_ID' = Sys.getenv('AWS_ACCESS_KEY_ID_FAASR'))
