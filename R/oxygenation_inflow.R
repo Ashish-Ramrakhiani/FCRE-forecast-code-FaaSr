@@ -22,7 +22,7 @@ library(stringr)
 
   server_name <- "forecasts_parquet"
   prefix <- stringr::str_split_fixed(config$s3$forecasts_parquet$bucket, "/", n = 2)[2]
-  forecast_s3 <- FaaSr::faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
+  forecast_s3 <- faasr_arrow_s3_bucket(server_name = server_name,faasr_prefix=prefix)
 
   inflow_temp_df <- arrow::open_dataset(forecast_s3) |>
     dplyr::mutate(reference_date = lubridate::as_date(reference_date)) |>
