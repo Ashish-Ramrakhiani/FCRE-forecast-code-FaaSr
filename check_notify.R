@@ -99,26 +99,34 @@ check_notify <- function(){
     "Site ID: ", config$location$site_id, "\n"
   )
   
-  # Write to local file
-  local_folder <- "."
-  local_file <- paste0("notify_status_", notification_timestamp, ".txt")
-  writeLines(notification_content, file.path(local_folder, local_file))
-  
-  # Upload to S3
-  server_name_upload <- "My_S3_Bucket"
-  remote_folder <- "notifications"
-  remote_file <- paste0("notify_status_", notification_timestamp, ".txt")
-  
-  faasr_put_file(
-    server_name = server_name_upload,
-    local_folder = local_folder,
-    local_file = local_file,
-    remote_folder = remote_folder,
-    remote_file = remote_file
-  )
-  
+ # Use absolute path
+local_folder <- getwd()  # Already navigated to repo root
+local_file <- paste0("notify_status_", notification_timestamp, ".txt")
+local_path <- file.path(local_folder, local_file)
+
+# Create the notification file
+writeLines(notification_content, local_path)
+
+# Verify file was created
+if (!file.exists(local_path)) {
+  stop(paste("Notification file was not created:", local_path))
+}
+
+# Upload to S3
+server_name_upload <- "My_S3_Bucket"
+remote_folder <- "notifications"
+remote_file <- basename(local_path)
+
+faasr_put_file(
+  server_name = server_name_upload,
+  local_folder = local_folder,  # Now absolute path
+  local_file = local_file,
+  remote_folder = remote_folder,
+  remote_file = remote_file
+)
+
   # Clean up local file
-  file.remove(file.path(local_folder, local_file))
+  file.remove(local_path)
   
   print(paste0("Notification status file uploaded: notify=", notify, ", file=", remote_file))
   
