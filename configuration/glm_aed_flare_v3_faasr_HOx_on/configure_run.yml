@@ -2,7 +2,7 @@ restart_file: .na
 start_datetime: 2025-05-31 00:00:00
 end_datetime: .na
 forecast_start_datetime: 2025-06-01 00:00:00
-forecast_horizon: 10
+forecast_horizon: 30
 sim_name: glm_aed_flare_v3_faasr_HOx_on
 configure_flare: configure_flare_glm_aed.yml
 configure_obs: observation_processing.yml
