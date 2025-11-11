@@ -254,7 +254,7 @@ arrow::write_dataset(df_historical_outflow,
     cat("vera_base_path:", vera_base_path, "\n")
 
     server_name <- "vera_forecasts"
-    prefix <- glue::glue("{vera_base_path}/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}/part-0.parquet")
+    prefix <- glue::glue("{vera_base_path}/project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
 
         cat("Full prefix:", prefix, "\n")
 
@@ -265,7 +265,7 @@ arrow::write_dataset(df_historical_outflow,
 
 cat("Successfully created S3 bucket connection\n")
 
-    vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}/part-0.parquet")
+    vera_path <- glue::glue("project_id=vera4cast/duration=P1D/variable={inflow_variables[i]}/model_id={original_inflow_model}/reference_date={reference_date}")
 
 
     cat("vera_path:", vera_path, "\n")
