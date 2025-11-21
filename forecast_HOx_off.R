@@ -7,7 +7,7 @@ forecast_HOx_off <- function(configure_run_file = "configure_run.yml",
   # requires tidyverse and lubridate
 
   Sys.setenv('GLM_PATH'='GLM3r')
-  options(future.globals.maxSize= 891289600)
+  options(future.globals.maxSize= 20 * 1024^3)
   set.seed(100)
 
   lake_directory <- here::here()
