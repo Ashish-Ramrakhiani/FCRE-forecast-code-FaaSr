@@ -40,7 +40,7 @@ location:
 da_setup:
     da_method: enkf
     par_fit_method: perturb
-    ensemble_size:  10000
+    ensemble_size:  1000
     localization_distance: .na #distance in meters were covariances in the model error are used
     no_negative_states: TRUE
     assimilate_first_step: FALSE
